@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <main class="app-shell">
+        <section id="welcomePane" class="pane welcome visible">
+            <div class="welcome-card">
+                <span class="label">Realtime room</span>
+                <h1>Enter your name to start chatting</h1>
+                <p class="subtitle">Drop your name, jump in, and watch messages appear instantly for everyone.</p>
+                <input class="input" id="username" placeholder="Your name" maxlength="40" autocomplete="off" />
+                <button class="btn btn-primary" id="startChatBtn" type="button" onclick="startChatUI()">Start Chat</button>
+                <p class="hint" id="welcomeHint"></p>
+            </div>
+        </section>
+
+        <section id="chatPane" class="pane chat hidden">
+            <header class="chat-head">
+                <div>
+                    <h2>OpenChat</h2>
+                    <p>Say hi and keep the conversation going</p>
+                </div>
+                <span id="activeUser" class="chip"></span>
+            </header>
+
+            <ul id="chat" class="messages"></ul>
+
+            <footer class="composer">
+                <input class="input" id="message" placeholder="Type your message and press Enter" autocomplete="off" />
+                <button class="btn" id="sendBtn" type="button" onclick="sendMessageUI()">Send Message</button>
+            </footer>
+        </section>
+    </main>
+    <script>
+        function startChatUI() {
+            const usernameInput = document.getElementById("username");
+            const hint = document.getElementById("welcomeHint");
+            const activeUser = document.getElementById("activeUser");
+            const welcomePane = document.getElementById("welcomePane");
+            const chatPane = document.getElementById("chatPane");
+
+            const name = usernameInput.value.trim();
+            if (!name) {
+                hint.textContent = "Please enter your name to continue.";
+                usernameInput.focus();
+                return;
+            }
+
+            activeUser.textContent = `You are: ${name}`;
+            hint.textContent = "";
+            welcomePane.classList.remove("visible");
+            welcomePane.classList.add("hidden");
+            chatPane.classList.remove("hidden");
+            chatPane.classList.add("visible");
+            classifyAllMessages();
+            document.getElementById("message").focus();
+        }
+
+        function sendMessageUI() {
+            const messageInput = document.getElementById("message");
+            const text = messageInput.value.trim();
+
+            if (!text) {
+                messageInput.focus();
+                return;
+            }
+
+            sendMessage();
+            messageInput.value = "";
+            messageInput.focus();
+        }
+
+        function normalizeName(name) {
+            return (name || "").trim().toLowerCase();
+        }
+
+        function getMyName() {
+            const label = document.getElementById("activeUser").textContent || "";
+            return label.replace("You are:", "").trim();
+        }
+
+        function extractMessageName(text) {
+            const sep = " : ";
+            const index = text.indexOf(sep);
+            if (index === -1) return "";
+            return text.slice(0, index).trim();
+        }
+
+        function parseMessageText(text) {
+            const sep = " : ";
+            const index = text.indexOf(sep);
+            if (index === -1) {
+                return {
+                    name: "Anonymous",
+                    message: text.trim()
+                };
+            }
+
+            return {
+                name: text.slice(0, index).trim() || "Anonymous",
+                message: text.slice(index + sep.length).trim()
+            };
+        }
+
+        function beautifyItem(li) {
+            if (li.dataset.formatted === "yes") return;
+
+            const parsed = parseMessageText(li.textContent || "");
+            li.innerHTML = `
+                <div class="wa-name">${parsed.name}</div>
+                <div class="wa-text">${parsed.message}</div>
+            `;
+            li.dataset.sender = parsed.name;
+            li.dataset.formatted = "yes";
+        }
+
+        function classifyItem(li) {
+            beautifyItem(li);
+            const myName = normalizeName(getMyName());
+            const sender = normalizeName(li.dataset.sender || "");
+            const mine = myName && sender && myName === sender;
+
+            li.classList.toggle("mine", !!mine);
+            li.classList.toggle("other", !mine);
+        }
+
+        function classifyAllMessages() {
+            const items = document.querySelectorAll("#chat li");
+            items.forEach(classifyItem);
+        }
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const usernameInput = document.getElementById("username");
+            const messageInput = document.getElementById("message");
+
+            usernameInput.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    startChatUI();
+                }
+            });
+
+            messageInput.addEventListener("keydown", function (event) {
+                if (event.key === "Enter") {
+                    sendMessageUI();
+                }
+            });
+
+            const chat = document.getElementById("chat");
+            const observer = new MutationObserver(function (mutations) {
+                mutations.forEach(function (mutation) {
+                    mutation.addedNodes.forEach(function (node) {
+                        if (node.nodeType === 1 && node.tagName === "LI") {
+                            classifyItem(node);
+                        }
+                    });
+                });
+            });
+
+            observer.observe(chat, { childList: true });
+            classifyAllMessages();
+        });
+    </script>
+    <script src="https://cdn.socket.io/4.0.1/socket.io.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
