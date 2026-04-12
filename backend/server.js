@@ -9,12 +9,13 @@ const app = express()
 const server = http.createServer(app)
 
 app.use(cors({
-  origin: "https://joinchat.app"
+  origin: "*"
 }));
 
 const io = new Server(server, {
   cors: {
-    origin: "https://joinchat.app"
+    origin: "*",
+    methods: ["GET", "POST"]
   }
 });
 
