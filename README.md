@@ -82,9 +82,3 @@ Data model
 - Add timestamps and pagination for message history.
 - Add user identities, rooms, or authentication for multi-room/private chats.
 - Consider rate-limiting or moderation tools to prevent spam.
-
-## License
-This project is provided as-is. Add a license file if you intend to publish or share.
-
-## Contact
-If you'd like, I can help extend this README with usage screenshots, or add a Dockerfile and CI workflow.
