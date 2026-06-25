@@ -1,4 +1,4 @@
-const socket = io("https://api.joinchat.app");
+const socket = io("http://api.joinchat.app");
 function sendMessage() {
     const username = document.getElementById('username').value;
     const message = document.getElementById('message').value;

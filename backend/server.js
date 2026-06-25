@@ -28,7 +28,7 @@ mongoose.connect(process.env.MONGO_URI)
 io.on('connection', async (socket) => {
     console.log('User Connected')
 
-    const messages = await Message.find() // fina all the data and store it in the messages variable.
+    const messages = await Message.find() // find all the data and store it in the messages variable.
     socket.emit("load_old_messages", messages)
 
     socket.on("send_message", async (data) => {
